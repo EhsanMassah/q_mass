@@ -1,0 +1,480 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{setspace}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=blue}
+\setstretch{1.25}
+
+\begin{document}
+
+\begin{center}
+    {\LARGE \textbf{Risk Management in Trading}}\\[6pt]
+    {\large Q-Mass}\\[4pt]
+    \rule{0.9\linewidth}{0.5pt}
+\end{center}
+
+\section*{1. Introduction}
+
+Risk management in trading refers to the systematic process of identifying, measuring, controlling, and optimising exposure to financial uncertainty. In simple terms, it ensures that traders and institutions survive adverse market moves and achieve stable, risk-adjusted profits over time. Rather than eliminating risk, effective management allows traders to take the \textbf{right risks in the right size for the right reward}.
+
+The mathematical foundation rests on probability theory, stochastic calculus, and statistical inference. Consider a portfolio with value $V_t$ at time $t$. The return over a period $\Delta t$ is:
+\[
+R_{t,\Delta t} = \frac{V_{t+\Delta t} - V_t}{V_t}
+\]
+Risk management seeks to understand and control the distribution of $R_{t,\Delta t}$, particularly its left tail (losses), while preserving opportunities for profit in the right tail. The challenge arises because this distribution is non-stationary, heavy-tailed, and subject to regime changes, contagion effects, and structural breaks.
+
+Historically, risk management evolved from simple position limits in the 1970s to sophisticated quantitative frameworks following the 1987 crash, the 1994 bond crisis, Long-Term Capital Management's collapse in 1998, and the 2008 financial crisis. Each catastrophe revealed blind spots: underestimation of tail risk, model dependency, liquidity illusions during stress, and correlation breakdown. Modern risk management therefore combines quantitative rigour with qualitative judgment, stress testing, and organisational governance.
+
+\section*{2. The Purpose of Risk Management}
+
+The primary goals of trading risk management are:
+\begin{itemize}
+    \item \textbf{Capital preservation:} Avoid catastrophic losses that threaten solvency. This requires understanding not just expected losses but extreme tail events. The objective is to ensure that with high confidence (e.g., 99.9\%), losses over any time horizon remain below capital reserves. Mathematically, if $C$ represents capital and $L_{\max}$ is the maximum credible loss, we require:
+    \[
+    P(L > C) < \epsilon
+    \]
+    where $\epsilon$ is an acceptably small probability (e.g., 0.001).
+    
+    \item \textbf{Profit stability:} Smooth earnings and avoid large drawdowns. Drawdowns erode investor confidence and can trigger redemptions or margin calls. The maximum drawdown is defined as:
+    \[
+    \text{MDD}_t = \max_{\tau \leq t}\left(\frac{V_{\tau} - V_t}{V_{\tau}}\right)
+    \]
+    Risk management aims to keep MDD within tolerable bounds through position sizing, diversification, and dynamic hedging. Empirical studies show that recovery time from drawdowns increases nonlinearly with drawdown magnitude, making drawdown control critical for long-term survival.
+    
+    \item \textbf{Efficient capital allocation:} Ensure that risk-taking produces commensurate returns. This involves risk budgeting, where total risk capacity is allocated across strategies based on their expected risk-adjusted returns. If strategy $i$ has expected return $\mu_i$, volatility $\sigma_i$, and correlation matrix $\Rho$ with other strategies, optimal allocation solves:
+    \[
+    \max_{\mathbf{w}} \left\{\mathbf{w}^T \boldsymbol{\mu} - \frac{\lambda}{2} \mathbf{w}^T \Sigma \mathbf{w}\right\}
+    \]
+    where $\lambda$ represents risk aversion, $\Sigma = \text{diag}(\boldsymbol{\sigma})\Rho\text{diag}(\boldsymbol{\sigma})$ is the covariance matrix, and constraints ensure $\sum w_i = 1$ and individual position limits are respected.
+    
+    \item \textbf{Regulatory compliance:} Adhere to frameworks such as Basel~III, the Fundamental Review of the Trading Book (FRTB), Dodd-Frank, MiFID II, and internal VaR limits. These regulations mandate specific capital charges, reporting requirements, and risk measurement methodologies. For instance, Basel III requires banks to hold capital equal to the higher of VaR and stressed VaR, multiplied by a factor (typically 3-4) plus a surcharge for breaches.
+\end{itemize}
+
+In a trading desk, risk management operates across the front office (traders and quants), middle office (risk control), and senior management (Chief Risk Officer, CRO). The front office generates alpha and executes trades; the middle office independently validates models, monitors limits, and aggregates exposures; senior management sets risk appetite, allocates capital, and ensures compliance. This separation prevents conflicts of interest and ensures robust governance.
+
+\section*{3. Types of Risk in Trading}
+
+\begin{itemize}
+    \item \textbf{Market Risk:} Losses from adverse price movements in assets held. Market risk decomposes into directional risk (overall market moves), spread risk (relative value changes), volatility risk (changes in implied volatility), and basis risk (spread between related instruments). For a portfolio of $n$ assets with weights $w_i$ and returns $r_i$, portfolio return is:
+    \[
+    r_p = \sum_{i=1}^n w_i r_i
+    \]
+    and portfolio variance is:
+    \[
+    \sigma_p^2 = \mathbf{w}^T \Sigma \mathbf{w} = \sum_{i=1}^n \sum_{j=1}^n w_i w_j \sigma_i \sigma_j \rho_{ij}
+    \]
+    Example: A crude oil trader holding 10,000 barrels of Brent crude at \$85/barrel faces market risk. If Brent falls to \$80/barrel, the loss is \$50,000. The risk increases with position size, price volatility, and holding period. During the April 2020 oil price crash, WTI futures briefly traded negative, demonstrating that market risk can exceed historical precedent.
+    
+    \item \textbf{Credit Risk:} The possibility that a counterparty fails to meet contractual obligations. This includes default risk (complete failure to pay), settlement risk (failure to deliver in exchange), and downgrade risk (deteriorating creditworthiness). Credit exposure for derivatives depends on current mark-to-market value plus potential future exposure (PFE):
+    \[
+    \text{Exposure} = \max(V_t, 0) + \alpha \cdot \text{PFE}
+    \]
+    where $\alpha$ is a supervisory factor. PFE is typically computed as the 97.5th percentile of future positive exposures over the contract life. Credit Value Adjustment (CVA) quantifies the expected loss due to counterparty default:
+    \[
+    \text{CVA} = \text{LGD} \sum_{i=1}^n EE(t_i) \cdot PD(t_{i-1}, t_i) \cdot DF(t_i)
+    \]
+    where LGD is loss given default, $EE(t_i)$ is expected exposure, $PD(t_{i-1}, t_i)$ is default probability, and $DF(t_i)$ is the discount factor.
+    
+    \item \textbf{Liquidity Risk:} Inability to exit or adjust positions without significant price impact, particularly during market stress. Liquidity risk manifests in two forms: market liquidity (ability to trade at fair prices) and funding liquidity (ability to meet cash obligations). The bid-ask spread $s$ and market depth $D$ characterize liquidity. For a position of size $Q$, the liquidation cost is approximately:
+    \[
+    \text{Cost} = \frac{sQ}{2} + \lambda Q^{3/2}
+    \]
+    where $\lambda$ measures nonlinear price impact. During the 2008 crisis, liquidity evaporated in previously deep markets, causing fire-sale spirals. Amihud's illiquidity measure captures this as:
+    \[
+    \text{ILLIQ} = \frac{1}{T}\sum_{t=1}^T \frac{|r_t|}{\text{Volume}_t}
+    \]
+    
+    \item \textbf{Operational Risk:} Arises from system failures, mispricing errors, fraud, or human mistakes in trade execution. Examples include the 2012 Knight Capital incident (\$440M loss in 45 minutes due to software error), the London Whale (JP Morgan, \$6.2B loss from inadequate controls), and rogue trading (Société Générale, \$4.9B loss). Operational risk is modeled using loss distribution approaches:
+    \[
+    L = \sum_{i=1}^N X_i
+    \]
+    where $N$ follows a Poisson distribution (frequency) and $X_i$ follows a severity distribution (often lognormal or Pareto for heavy tails). The 99.9th percentile of $L$ determines regulatory capital under the Advanced Measurement Approach.
+    
+    \item \textbf{Model Risk:} Risk that models used to price, hedge, or measure risk are inaccurate due to wrong assumptions, parameter estimation error, numerical implementation bugs, or regime changes. Model risk includes specification risk (wrong functional form), calibration risk (wrong parameters), and implementation risk (coding errors). The 2008 crisis revealed massive model risk in Gaussian copula models for CDOs. Model validation requires:
+    \begin{itemize}
+        \item Back-testing: comparing model predictions to realized outcomes
+        \item Sensitivity analysis: testing parameter perturbations
+        \item Scenario analysis: evaluating behavior under extreme conditions
+        \item Independent replication: verifying implementation
+    \end{itemize}
+    Model reserve or prudent valuation adjustments (PVA) are held against model uncertainty, typically 10-25\% of model reserves.
+    
+    \item \textbf{Basis and Correlation Risk:} Occurs when hedging instruments do not perfectly track the exposure being hedged, or when correlated assets behave unexpectedly during crises. Basis risk arises from tenor mismatch (3-month vs 6-month rates), location mismatch (Brent vs WTI oil), or contract specification differences. The basis $b_t = S_t - F_t$ (spot minus futures) is stochastic. For a hedge ratio $h$, the hedged portfolio value is:
+    \[
+    V_h = S_T - h F_T
+    \]
+    with variance:
+    \[
+    \text{Var}(V_h) = \sigma_S^2 + h^2\sigma_F^2 - 2h\rho\sigma_S\sigma_F
+    \]
+    Minimizing this yields the optimal hedge ratio $h^* = \rho\sigma_S/\sigma_F$. However, during crises, correlations become unstable. The 1998 LTCM crisis showed that convergence trades can diverge before converging, and "correlation equals one in a crisis" as diversification benefits vanish.
+\end{itemize}
+
+\section*{4. Core Components of the Risk Management Process}
+
+\subsection*{4.1 Exposure Identification}
+
+All trading positions expose the portfolio to certain risk factors, for instance, equity prices, commodity prices, interest rates, or exchange rates. Each position can be expressed as a function of these variables:
+\[
+P = f(S_1, S_2, \ldots, S_n)
+\]
+where $S_i$ are underlying market variables and $P$ is the portfolio value.
+
+The first step is decomposing complex portfolios into fundamental risk factors. For equity portfolios, this involves factor models such as the Fama-French three-factor model:
+\[
+r_i - r_f = \alpha_i + \beta_{i,M}(r_M - r_f) + \beta_{i,SMB} \cdot SMB + \beta_{i,HML} \cdot HML + \epsilon_i
+\]
+where $r_M - r_f$ is market excess return, SMB is size factor (small minus big), and HML is value factor (high minus low book-to-market). For fixed income, principal component analysis (PCA) decomposes yield curve movements into level, slope, and curvature:
+\[
+\Delta y(t,T) \approx a_1(T)\cdot PC_1 + a_2(T)\cdot PC_2 + a_3(T)\cdot PC_3
+\]
+where $PC_1$ explains ~80\% of variance (parallel shifts), $PC_2$ explains ~15\% (steepening/flattening), and $PC_3$ explains ~3\% (butterfly). For commodities, risk factors include prompt prices, calendar spreads, crack spreads (refining margins), and basis differentials between delivery locations.
+
+In practice, exposure identification requires mapping each trade to its risk factors. For example, a 5-year interest rate swap receiving fixed and paying floating maps to:
+\begin{itemize}
+    \item Interest rate risk across the yield curve (DV01 at each tenor)
+    \item Basis risk between swap rates and government bonds
+    \item Counterparty credit risk (CVA)
+\end{itemize}
+Exotic options require additional risk factors such as volatility surfaces (by strike and maturity), correlation matrices, and dividend expectations.
+
+\subsection*{4.2 Sensitivity Analysis}
+
+The change in portfolio value with respect to small movements in each market factor is measured through \textbf{Greeks}:
+\[
+\Delta_i = \frac{\partial P}{\partial S_i}, \quad \Gamma_i = \frac{\partial^2 P}{\partial S_i^2}, \quad \text{etc.}
+\]
+This helps quantify how the portfolio reacts to underlying shifts and forms the foundation for hedging.
+
+The complete set of Greeks for options includes:
+\begin{align*}
+\text{Delta} \quad &\Delta = \frac{\partial V}{\partial S} &&\text{(directional exposure)}\\
+\text{Gamma} \quad &\Gamma = \frac{\partial^2 V}{\partial S^2} &&\text{(convexity, delta hedging error)}\\
+\text{Vega} \quad &\mathcal{V} = \frac{\partial V}{\partial \sigma} &&\text{(volatility exposure)}\\
+\text{Theta} \quad &\Theta = \frac{\partial V}{\partial t} &&\text{(time decay)}\\
+\text{Rho} \quad &\rho = \frac{\partial V}{\partial r} &&\text{(interest rate sensitivity)}
+\end{align*}
+
+For a European call option under Black-Scholes, these are:
+\begin{align*}
+\Delta &= N(d_1) \\
+\Gamma &= \frac{n(d_1)}{S\sigma\sqrt{T}} \\
+\mathcal{V} &= S n(d_1) \sqrt{T} \\
+\Theta &= -\frac{S n(d_1) \sigma}{2\sqrt{T}} - rKe^{-rT}N(d_2) \\
+\rho &= KTe^{-rT}N(d_2)
+\end{align*}
+where $n(\cdot)$ is the standard normal density, $N(\cdot)$ is the cumulative distribution, and:
+\[
+d_1 = \frac{\ln(S/K) + (r + \sigma^2/2)T}{\sigma\sqrt{T}}, \quad d_2 = d_1 - \sigma\sqrt{T}
+\]
+
+For portfolios, Greeks aggregate linearly:
+\[
+\Delta_{\text{portfolio}} = \sum_i \Delta_i \cdot n_i
+\]
+where $n_i$ is the number of contracts. However, cross-gamma (mixed second derivatives) matters for multi-asset portfolios:
+\[
+\Gamma_{ij} = \frac{\partial^2 P}{\partial S_i \partial S_j}
+\]
+
+Fixed income sensitivity is measured by DV01 (dollar value of a basis point):
+\[
+\text{DV01} = -\frac{\partial P}{\partial y} \cdot 0.0001
+\]
+where $y$ is yield. For a bond with price $P$, modified duration $D^*$, and convexity $C$:
+\[
+\frac{\Delta P}{P} \approx -D^* \Delta y + \frac{1}{2}C(\Delta y)^2
+\]
+Key rate durations measure sensitivity to specific points on the yield curve, enabling precise hedging.
+
+Sensitivity analysis also includes scenario Greeks: how Greeks themselves change under market stress. For instance, gamma increases near expiry and at-the-money, creating hedging challenges for options market makers.
+
+\subsection*{4.3 Simulation of Outcomes}
+
+Traders and risk managers simulate many possible market scenarios to understand potential outcomes:
+\begin{itemize}
+    \item \textbf{Historical Simulation:} Replay actual past market changes. Take the last $N$ days of historical returns $\{r_1, r_2, \ldots, r_N\}$ and apply them to current positions. If current portfolio value is $V_0$, simulated future values are:
+    \[
+    V_i^{\text{sim}} = V_0(1 + r_i), \quad i = 1, \ldots, N
+    \]
+    This is non-parametric (no distributional assumptions) but assumes the future resembles the past. It misses events outside the historical window (the "peso problem") and suffers from limited sample size. To address this, volatility-scaled historical simulation multiplies historical returns by current volatility:
+    \[
+    r_i^{\text{scaled}} = r_i \cdot \frac{\sigma_{\text{current}}}{\sigma_{\text{historical}}}
+    \]
+    
+    \item \textbf{Monte Carlo Simulation:} Generate random paths for future prices under stochastic models. For geometric Brownian motion:
+    \[
+    dS_t = \mu S_t dt + \sigma S_t dW_t
+    \]
+    Discretized using Euler scheme:
+    \[
+    S_{t+\Delta t} = S_t \exp\left[\left(\mu - \frac{\sigma^2}{2}\right)\Delta t + \sigma\sqrt{\Delta t}\,Z\right]
+    \]
+    where $Z \sim N(0,1)$. Generate $M$ paths (typically 10,000-100,000), revalue the portfolio under each path, and obtain empirical P\&L distribution. For multiple assets, use Cholesky decomposition of correlation matrix $\Rho = LL^T$ to generate correlated normals:
+    \[
+    \mathbf{Z}^{\text{corr}} = L\mathbf{Z}
+    \]
+    Advanced models include jump-diffusion (Merton model), stochastic volatility (Heston model), and regime-switching models.
+\end{itemize}
+
+The result is a full distribution of potential profits and losses (P\&L), from which key risk measures are derived. The empirical cumulative distribution function is:
+\[
+\hat{F}(x) = \frac{1}{M}\sum_{i=1}^M \mathbb{1}_{L_i \leq x}
+\]
+where $L_i$ are simulated losses. This enables computation of any quantile or tail statistic.
+
+\subsection*{4.4 Risk Metrics}
+
+\paragraph{Value-at-Risk (VaR)} estimates the maximum expected loss over a given horizon at a specified confidence level:
+\[
+\text{VaR}_{99\%} = \text{Quantile}_{1\%}(L)
+\]
+where $L$ is the simulated loss distribution.
+
+Formally, VaR at confidence level $\alpha$ is the smallest loss $\ell$ such that:
+\[
+P(L > \ell) \leq 1 - \alpha
+\]
+or equivalently:
+\[
+\text{VaR}_{\alpha} = \inf\{\ell : F_L(\ell) \geq \alpha\}
+\]
+For example, 1-day 99\% VaR of \$10M means there is 1\% probability that tomorrow's loss exceeds \$10M. Scaling VaR to different horizons uses the square-root rule (assuming i.i.d. returns):
+\[
+\text{VaR}_T = \text{VaR}_1 \sqrt{T}
+\]
+though this underestimates risk when returns are fat-tailed or autocorrelated.
+
+Parametric VaR under normality assumptions:
+\[
+\text{VaR}_{\alpha} = \mu + \sigma \Phi^{-1}(1-\alpha)
+\]
+where $\Phi^{-1}$ is the inverse standard normal CDF. For 99\% VaR with $\alpha = 0.99$, $\Phi^{-1}(0.01) \approx -2.33$, so:
+\[
+\text{VaR}_{99\%} = \mu - 2.33\sigma
+\]
+
+VaR limitations: not subadditive (VaR of portfolio can exceed sum of component VaRs), sensitive to distributional assumptions, ignores tail shape beyond the quantile, and can incentivize regulatory arbitrage.
+
+\paragraph{Expected Shortfall (ES)} or Conditional VaR represents the average loss beyond the VaR threshold:
+\[
+\text{ES}_{99\%} = \mathbb{E}[L \mid L > \text{VaR}_{99\%}]
+\]
+
+ES is a coherent risk measure satisfying subadditivity, monotonicity, positive homogeneity, and translation invariance. For continuous distributions:
+\[
+\text{ES}_{\alpha} = \frac{1}{1-\alpha}\int_{\alpha}^1 \text{VaR}_u\, du
+\]
+Under normal distribution:
+\[
+\text{ES}_{\alpha} = \mu + \sigma \frac{\phi(\Phi^{-1}(1-\alpha))}{1-\alpha}
+\]
+where $\phi$ is the standard normal PDF. For 99\% ES, this gives approximately:
+\[
+\text{ES}_{99\%} \approx \mu - 2.67\sigma
+\]
+
+ES is the preferred measure under Basel III's FRTB framework because it captures tail risk better than VaR and encourages genuine risk reduction rather than VaR gaming.
+
+\paragraph{Stress Testing and Scenario Analysis} simulate extreme but plausible market conditions such as the 2008 credit crisis, 1987 Black Monday, 1998 LTCM crisis, 2010 Flash Crash, 2015 Swiss Franc de-pegging, or 2020 COVID-19 crash to test the portfolio's resilience.
+
+Regulatory stress tests (Fed's CCAR, ECB's stress tests) impose macroeconomic scenarios such as:
+\begin{itemize}
+    \item Severe recession: GDP falls 5\%, unemployment rises to 10\%
+    \item Market crash: equities down 40\%, credit spreads widen 300bp
+    \item Rate shock: yield curve shifts up 200bp or inverts
+    \item FX crisis: emerging market currencies depreciate 30\%
+\end{itemize}
+
+Custom stress scenarios should reflect portfolio-specific vulnerabilities. For an oil trading book, scenarios might include:
+\begin{itemize}
+    \item Supply shock: OPEC production cut, Brent rises \$30/barrel
+    \item Demand collapse: global recession, oil falls \$40/barrel
+    \item Contango explosion: storage fills, calendar spreads blow out
+    \item Refining margin squeeze: crack spreads compress 50\%
+\end{itemize}
+
+Reverse stress testing asks: "What scenario would cause unacceptable losses?" This identifies hidden vulnerabilities. Mathematically, solve:
+\[
+\max_{\mathbf{s}} \{L(\mathbf{s}) : \mathbf{s} \in \text{plausible scenarios}\}
+\]
+where $\mathbf{s}$ is a vector of market shocks and $L(\mathbf{s})$ is the resulting loss.
+
+\subsection*{4.5 Limit Structures and Controls}
+
+Institutions set quantitative and qualitative limits to prevent excessive exposure:
+\begin{itemize}
+    \item \textbf{Position limits:} Maximum number of contracts, notional value, or open interest. For instance, "no more than 5,000 crude oil futures contracts" or "maximum \$100M notional in IG credit." Limits may be gross or net, and often apply at multiple levels: individual trader, desk, business unit, firm-wide.
+    
+    \item \textbf{Stop-loss limits:} Maximum daily or cumulative losses. Once triggered, positions must be reduced or liquidated. For example, "close all positions if daily loss exceeds \$5M" or "cannot continue trading if monthly loss exceeds \$20M." These prevent small losses from becoming catastrophic. However, stop-losses can be difficult to execute in fast markets and may crystalize losses at the worst time.
+    
+    \item \textbf{VaR or ES limits:} Maximum model-based risk exposure. For example, "desk VaR cannot exceed \$15M at 99\% confidence." These limits connect to capital allocation: if the firm has \$1B capital and risk tolerance of 5\% capital at risk, total VaR limit is \$50M, divided among desks based on expected returns and diversification.
+    
+    \item \textbf{Stress-test limits:} Loss under extreme scenarios must not exceed capital thresholds. For instance, "loss in 2008-style crisis scenario cannot exceed \$100M." These complement VaR by addressing tail events.
+    
+    \item \textbf{Concentration limits:} Maximum exposure to single issuer, sector, country, or counterparty. For example, "no more than 10\% of portfolio in one issuer" or "aggregate exposure to single counterparty cannot exceed \$50M." These prevent idiosyncratic blow-ups.
+    
+    \item \textbf{Liquidity limits:} Maximum position size relative to market liquidity. For instance, "position cannot exceed 5\% of average daily volume" or "must be liquidatable within 5 days at 10\% of daily volume without exceeding 10bp slippage."
+    
+    \item \textbf{Greeks limits:} Constraints on delta, gamma, vega exposure. For example, "net delta must be between -100 and +100," "gamma cannot exceed 10," "vega must be less than 50." These ensure hedged portfolios don't accumulate hidden risks.
+\end{itemize}
+
+These boundaries ensure individual traders cannot jeopardise the entire firm. Limit frameworks must be:
+\begin{itemize}
+    \item Comprehensive: covering all material risks
+    \item Consistent: compatible across metrics and levels
+    \item Calibrated: reflecting actual risk tolerance and capital
+    \item Monitored: real-time tracking with alerts
+    \item Enforced: consequences for breaches (reduced limits, dismissal)
+    \item Reviewed: adjusted as market conditions and strategies evolve
+\end{itemize}
+
+Limit breaches trigger escalation procedures: immediate reporting to risk management, explanation required, position reduction plan, and potential trading suspension. Persistent breaches indicate inadequate limits or controls.
+
+\subsection*{4.6 Hedging and Diversification}
+
+Hedging mitigates unwanted exposure by taking offsetting positions. For instance, a physical crude oil trader might short ICE Brent futures to reduce downside exposure. The hedge ratio is typically chosen as:
+\[
+h^* = \frac{\text{Cov}(P, H)}{\text{Var}(H)}
+\]
+where $P$ is the exposure and $H$ is the hedging instrument.
+
+Deriving the optimal hedge ratio: suppose an unhedged position has value $P$ with variance $\sigma_P^2$. A hedge of size $h$ in instrument $H$ creates portfolio value:
+\[
+\Pi = P - hH
+\]
+The variance is:
+\[
+\text{Var}(\Pi) = \text{Var}(P) + h^2\text{Var}(H) - 2h\text{Cov}(P,H)
+\]
+Minimizing with respect to $h$:
+\[
+\frac{\partial}{\partial h}\text{Var}(\Pi) = 2h\text{Var}(H) - 2\text{Cov}(P,H) = 0
+\]
+yields:
+\[
+h^* = \frac{\text{Cov}(P,H)}{\text{Var}(H)} = \rho_{P,H}\frac{\sigma_P}{\sigma_H}
+\]
+The resulting minimum variance is:
+\[
+\text{Var}(\Pi^*) = \sigma_P^2(1 - \rho_{P,H}^2)
+\]
+The hedging effectiveness is $\rho_{P,H}^2$, the proportion of variance eliminated.
+
+Dynamic hedging adjusts hedge ratios as positions and market conditions change. Delta hedging for options rebalances to maintain delta neutrality:
+\[
+h_{\Delta}(t) = -\Delta(t)
+\]
+As spot price and time change, delta changes (due to gamma), requiring continuous rebalancing. In discrete time with rebalancing interval $\Delta t$, the hedging error is approximately:
+\[
+\text{Error} \approx \frac{1}{2}\Gamma(\Delta S)^2 + \Theta \Delta t
+\]
+This is the P\&L from gamma and theta while delta-hedged.
+
+Cross-hedging uses related but not identical instruments. For example, hedging jet fuel exposure with crude oil futures. The basis risk is:
+\[
+\text{Basis risk} = \text{Var}(P - h^*H) = \sigma_P^2(1 - \rho_{P,H}^2)
+\]
+Lower correlation means higher basis risk.
+
+Macro hedging uses systematic factors. For instance, a portfolio of emerging market equities might hedge dollar risk by shorting MSCI EM index futures:
+\[
+h_{\text{macro}} = \beta_{\text{portfolio,index}}
+\]
+where $\beta$ is computed via regression.
+
+Diversification reduces portfolio risk by combining uncorrelated exposures. For $n$ equally-weighted assets with average variance $\bar{\sigma}^2$ and average correlation $\bar{\rho}$:
+\[
+\sigma_p^2 = \frac{\bar{\sigma}^2}{n} + \left(1 - \frac{1}{n}\right)\bar{\rho}\bar{\sigma}^2 \to \bar{\rho}\bar{\sigma}^2 \text{ as } n \to \infty
+\]
+Diversification eliminates idiosyncratic risk (first term) but not systematic risk (second term). The diversification ratio:
+\[
+DR = \frac{\sum w_i \sigma_i}{\sigma_p}
+\]
+measures benefit; $DR > 1$ indicates diversification. However, diversification fails during crises when correlations spike toward one. The tail dependence parameter $\lambda$ measures co-movement in extremes:
+\[
+\lambda = \lim_{u \to 1} P(F_X > u \mid F_Y > u)
+\]
+where $F$ are marginal distributions. Gaussian copulas have $\lambda = 0$ (no tail dependence), but empirical data shows $\lambda > 0$, motivating t-copulas or other heavy-tailed dependence structures.
+
+\subsection*{4.7 Performance and Risk-Adjusted Returns}
+
+Risk management also evaluates how efficiently risk is converted into returns. Common performance metrics include:
+\[
+\text{Sharpe Ratio} = \frac{E[R - R_f]}{\sigma}, \qquad 
+\text{Sortino Ratio} = \frac{E[R - R_f]}{\sigma_{\text{downside}}}
+\]
+These indicate whether profits are the result of skill or simply exposure to volatility.
+
+The Sharpe ratio measures excess return per unit of total volatility. For a strategy with mean return $\mu$, risk-free rate $r_f$, and standard deviation $\sigma$:
+\[
+SR = \frac{\mu - r_f}{\sigma}
+\]
+Estimating from sample data with $T$ observations:
+\[
+\widehat{SR} = \frac{\bar{r} - r_f}{s}
+\]
+where $\bar{r}$ is sample mean and $s$ is sample standard deviation. The asymptotic distribution is:
+\[
+\sqrt{T}\,\widehat{SR} \sim N\left(SR, 1 + \frac{SR^2}{2}\right)
+\]
+enabling hypothesis testing. A Sharpe ratio of 1.0 is respectable, 2.0 is excellent, above 3.0 raises questions about hidden risks or data mining. For annualization from daily data:
+\[
+SR_{\text{annual}} = SR_{\text{daily}} \times \sqrt{252}
+\]
+
+The Sortino ratio penalizes only downside volatility:
+\[
+\text{Sortino} = \frac{\mu - r_f}{\sigma_{\text{down}}}
+\]
+where downside deviation is:
+\[
+\sigma_{\text{down}} = \sqrt{\frac{1}{T}\sum_{t=1}^T \min(r_t - r_f, 0)^2}
+\]
+This better reflects investor preferences as upside volatility is desirable.
+
+Additional risk-adjusted metrics include:
+
+\textbf{Information Ratio (IR):} measures active return per unit of tracking error:
+\[
+IR = \frac{r_p - r_b}{\sigma_{r_p - r_b}}
+\]
+where $r_b$ is benchmark return. IR quantifies manager skill in active management.
+
+\textbf{Calmar Ratio:} return over maximum drawdown:
+\[
+\text{Calmar} = \frac{\mu}{\text{MDD}}
+\]
+Relevant for strategies where drawdown control is paramount (e.g., managed futures).
+
+\textbf{Omega Ratio:} ratio of probability-weighted gains to losses:
+\[
+\Omega(\tau) = \frac{\int_{\tau}^{\infty}(1 - F(x))dx}{\int_{-\infty}^{\tau}F(x)dx}
+\]
+where $\tau$ is a threshold return (often 0). Omega captures the entire distribution shape.
+
+\textbf{Risk-adjusted return on capital (RAROC):} measures return relative to economic capital:
+\[
+\text{RAROC} = \frac{\text{Expected Return} - \text{Expected Loss}}{\text{Economic Capital}}
+\]
+Used for capital allocation and performance evaluation. Economic capital is typically set at VaR or ES at 99.9\% confidence.
+
+\textbf{Maximum Adverse Excursion (MAE):} largest unrealized loss during a trade's lifetime, useful for understanding worst-case intra-trade risk even if the trade ultimately profits.
+
+Performance attribution decomposes returns into systematic factors, alpha, and interaction effects. For a portfolio with factor exposures $\boldsymbol{\beta}$ and factor returns $\mathbf{f}$:
+\[
+r_p = \alpha + \boldsymbol{\beta}^T\mathbf{f} + \epsilon
+\]
+Attribution identifies whether returns came from market exposure ($\boldsymbol{\beta}^T\mathbf{f}$), skill ($\alpha$), or luck ($\epsilon$).
+
+Transaction cost analysis (TCA) evaluates execution quality by comparing realized prices to benchmarks (arrival price, VWAP, implementation shortfall):
+\[
+\text{Implementation Shortfall} = \frac{P_{\text{avg executed}} - P_{\text{decision}}}{P_{\text{decision}}} + \frac{P_{\text{close}} - P_{\text{decision}}}{P_{\text{decision}}} \times \frac{Q_{\text{unfilled}}}{Q_{\text{total}}}
+\]
+Poor execution erodes returns and indicates operational risk.
+
+\end{document}
